@@ -5,12 +5,11 @@ import (
 	"net/http"
 )
 
-// This is the starting of the program
 func main() {
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8080", http.HandlerFunc(handle))
 }
 
 func handle(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL)
+	fmt.Println(r.Method, r.URL)
 	w.Write([]byte("hello, world!"))
 }

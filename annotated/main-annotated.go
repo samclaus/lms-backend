@@ -1,4 +1,4 @@
-package main
+package annotated
 
 //  import necessary packages:
 //  fmt for printing to terminal

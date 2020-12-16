@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -22,5 +23,12 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	ws.ReadMessage()
+	for {
+		messageType, data, err := ws.ReadMessage()
+		if err != nil {
+			log.Printf("error reading message from websocket: %v\n", err)
+			break
+		}
+		fmt.Println("message received: %d %s", data)
+	}
 }

@@ -32,7 +32,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 				log.Printf("error reading message from websocket: %v\n", err)
 				break
 			}
-			fmt.Println("message received: %d %s", data)
+			fmt.Println("message received: %d %s", messageType, data)
 		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)

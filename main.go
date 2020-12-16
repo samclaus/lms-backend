@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -14,10 +15,10 @@ func main() {
 
 func handle(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method, r.URL)
-	w.Write([]byte("hello, world!"))
 
 	if r.URL.Path == "/" || r.URL.Path == "/index.html" {
-
+		indexBytes, _ := ioutil.ReadFile("./index.html")
+		w.Write(indexBytes)
 	} else if r.URL.Path == "/connect" {
 		upgrader := websocket.Upgrader{}
 		ws, err := upgrader.Upgrade(w, r, nil)
@@ -32,7 +33,8 @@ func handle(w http.ResponseWriter, r *http.Request) {
 				log.Printf("error reading message from websocket: %v\n", err)
 				break
 			}
-			fmt.Println("message received: %d %s", messageType, data)
+
+			fmt.Printf("message received: %d %s\n", messageType, string(data))
 		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)

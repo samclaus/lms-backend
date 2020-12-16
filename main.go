@@ -16,19 +16,25 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method, r.URL)
 	w.Write([]byte("hello, world!"))
 
-	upgrader := websocket.Upgrader{}
-	ws, err := upgrader.Upgrade(w, r, nil)
+	if r.URL.Path == "/" || r.URL.Path == "/index.html" {
 
-	if err != nil {
-		fmt.Println(err)
-	}
+	} else if r.URL.Path == "/connect" {
+		upgrader := websocket.Upgrader{}
+		ws, err := upgrader.Upgrade(w, r, nil)
 
-	for {
-		messageType, data, err := ws.ReadMessage()
 		if err != nil {
-			log.Printf("error reading message from websocket: %v\n", err)
-			break
+			fmt.Println(err)
 		}
-		fmt.Println("message received: %d %s", data)
+
+		for {
+			messageType, data, err := ws.ReadMessage()
+			if err != nil {
+				log.Printf("error reading message from websocket: %v\n", err)
+				break
+			}
+			fmt.Println("message received: %d %s", data)
+		}
+	} else {
+		w.WriteHeader(http.StatusNotFound)
 	}
 }

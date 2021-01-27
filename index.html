@@ -13,7 +13,7 @@
         const button = document.querySelector("button");
         const websocket = new WebSocket(`ws://${location.host}/connect`);
 
-        websocket.onmessage = message => console.log("Got websocket message:", message);
+        websocket.onmessage = ev => console.log("Got websocket message:", ev.data);
 
         button.addEventListener("click", clickEvent => {
             websocket.send(textArea.value);

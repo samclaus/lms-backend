@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -8,6 +9,11 @@ import (
 
 	"github.com/gorilla/websocket"
 )
+
+type UserInfo struct {
+	ID    string `json:"id"`
+	Email string `json:"email_address"`
+}
 
 func main() {
 	http.ListenAndServe(":8080", http.HandlerFunc(handle))
@@ -26,6 +32,13 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		jsonUserInfo, _ := json.MarshalIndent(UserInfo{
+			ID:    "ergerkgberg",
+			Email: "bla@email.com",
+		}, "", "    ")
+
+		ws.WriteMessage(websocket.TextMessage, jsonUserInfo)
 
 		for {
 			messageType, data, err := ws.ReadMessage()

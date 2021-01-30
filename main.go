@@ -15,6 +15,10 @@ type UserInfo struct {
 	Email string `json:"email_address"`
 }
 
+func hello() {
+	fmt.Println("hello!")
+}
+
 func main() {
 	http.ListenAndServe(":8080", http.HandlerFunc(handle))
 }

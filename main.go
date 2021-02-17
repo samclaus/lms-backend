@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -26,10 +25,7 @@ func main() {
 func handle(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method, r.URL)
 
-	if r.URL.Path == "/" || r.URL.Path == "/index.html" {
-		indexBytes, _ := ioutil.ReadFile("./index.html")
-		w.Write(indexBytes)
-	} else if r.URL.Path == "/connect" {
+	if r.URL.Path == "/connect" {
 		upgrader := websocket.Upgrader{}
 		ws, err := upgrader.Upgrade(w, r, nil)
 

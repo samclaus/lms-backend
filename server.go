@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -24,7 +25,7 @@ type Server struct {
 // NewServer attempts to open the given database file and returns a new Server if
 // successful.
 func NewServer(dbPath string) (*Server, error) {
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config)
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		return nil, errors.Wrap(err, "error opening database")
 	}
@@ -59,8 +60,29 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed to upgrade connection to WebSocket: %v", err)
 		return
 	}
+	defer ws.Close()
 
-	// INSERT AUTHENTICATION CODE HERE
+	type Login struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	_, loginMsg, err := ws.ReadMessage()
+	if err != nil {
+		log.Printf("error reading login message from websocket: %v\n", err)
+		return
+	}
+
+	var loginInfo Login
+	if err = json.Unmarshal(loginMsg, &loginInfo); err != nil {
+		log.Printf("Invalid authentication JSON received: %v", err)
+		return
+	}
+
+	log.Printf("Received login request from user: %s", loginInfo.Username)
+
+	var user UserInfo
+	s.Database.Take(&user, &UserInfo{Username: loginInfo.Username})
 
 	for {
 		messageType, data, err := ws.ReadMessage()

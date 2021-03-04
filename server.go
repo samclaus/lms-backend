@@ -22,6 +22,14 @@ type Server struct {
 	Database *gorm.DB
 }
 
+// Request represents a request made from the client via WebSockets. It includes
+// the type of request so that we know what handler function to use with it and
+// the data associated with the request, which is passed on to  the handler function.
+type Request struct {
+	RequestType string                 `json:"type"`
+	RequestData map[string]interface{} `json:"data"`
+}
+
 // NewServer attempts to open the given database file and returns a new Server if
 // successful.
 func NewServer(dbPath string) (*Server, error) {
@@ -61,11 +69,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer ws.Close()
-
-	type Login struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
 
 	_, loginMsg, err := ws.ReadMessage()
 	if err != nil {

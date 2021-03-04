@@ -26,8 +26,8 @@ type Server struct {
 // the type of request so that we know what handler function to use with it and
 // the data associated with the request, which is passed on to  the handler function.
 type Request struct {
-	RequestType string                 `json:"type"`
-	RequestData map[string]interface{} `json:"data"`
+	RequestType string            `json:"type"`
+	RequestData map[string]string `json:"data"`
 }
 
 // NewServer attempts to open the given database file and returns a new Server if
@@ -70,30 +70,35 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	_, loginMsg, err := ws.ReadMessage()
-	if err != nil {
-		log.Printf("error reading login message from websocket: %v\n", err)
-		return
-	}
+	// TODO: insert infinite for loop that ends when the connection is closed for reading and handling requests
+	keepListening := true
 
-	var loginInfo Login
-	if err = json.Unmarshal(loginMsg, &loginInfo); err != nil {
-		log.Printf("Invalid authentication JSON received: %v", err)
-		return
-	}
-
-	log.Printf("Received login request from user: %s", loginInfo.Username)
-
-	var user UserInfo
-	s.Database.Take(&user, &UserInfo{Username: loginInfo.Username})
-
-	for {
-		messageType, data, err := ws.ReadMessage()
+	for keepListening {
+		_, requestText, err := ws.ReadMessage()
 		if err != nil {
-			log.Printf("error reading message from websocket: %v\n", err)
+			log.Printf("Error reading client request from websocket: %v\n", err)
 			break
 		}
 
-		fmt.Printf("message received: %d %s\n", messageType, string(data))
+		var requestObject Request
+		if err = json.Unmarshal(requestText, &requestObject); err != nil {
+			log.Printf("Invalid request JSON received: %v", err)
+			return
+		}
+
+		switch requestObject.RequestType {
+		case "login":
+			{
+				HandleLogin(requestObject)
+			}
+		default:
+			{
+				fmt.Printf("Error finding request type %v", requestObject.RequestType)
+			}
+		}
 	}
+
+	//Remnants of old code that haven't been cleaned up yet
+	// var user UserInfo
+	// s.Database.Take(&user, &UserInfo{Username: loginInfo.Username})
 }

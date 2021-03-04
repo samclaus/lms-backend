@@ -23,7 +23,9 @@ type Login struct {
 // HandleLogin is the login request handler function. It takes a Request
 // as a parameter.
 func HandleLogin(r Request) {
-	var requestData = r.RequestData
-	fmt.Print("Login request data:", requestData)
+	var loginData Login
+	loginData.Username = r.RequestData["username"]
+	loginData.Password = r.RequestData["password"]
+	fmt.Print("Login request received from", loginData.Username)
 
 }

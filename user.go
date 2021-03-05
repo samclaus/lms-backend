@@ -35,7 +35,8 @@ func HandleLogin(r Request, s *Server) bool {
 		return false
 	}
 
-	fmt.Printf("User %v found in database, authenticated\n", loginData.Username)
+	fmt.Printf("User %v found in database, attempting to authenticate\n", loginData.Username)
+	// TODO: salt and hash password and compare to database, return true if authenticated
 	// fmt.Print(user)
-	return true
+	return false
 }

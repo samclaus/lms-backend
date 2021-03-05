@@ -77,9 +77,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	keepListening := true
-
-	for keepListening {
+	// Unauthenticated actions, eg. logging in or creating new user
+	for {
 		_, requestText, err := ws.ReadMessage()
 		if err != nil {
 			log.Printf("Error reading client request from websocket: %v\n", err)
@@ -98,6 +97,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				loginSuccess, user, _ := HandleLogin(requestObject, s)
 				if loginSuccess {
 					ws.WriteMessage(1, []byte("User "+user.Username+" logged in successfully"))
+					// Start looping to read authenticated requests here
 				} else {
 					ws.WriteMessage(1, []byte("Authentication failed for user "+user.Username))
 					return
@@ -105,6 +105,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		default:
 			{
+				ws.WriteMessage(1, []byte("Invalid Request type"))
 				fmt.Printf("Error finding request type %v", requestObject.RequestType)
 			}
 		}

@@ -1,14 +1,16 @@
 # lms-backend
 Learning Management System backend written in Golang
 
-# Changes implemented in this fork
+This branch has gotten too big lol.
+
+# Changes implemented in this branch
 
 ## New request structure for websocket requests from the frontend
-Go Implementation of generic WebSocketRequest struct
+Go Implementation of generic WebSocketRequest struct. All Request data must have keys and values be strings.
 ```go
 type WebSocketRequest struct {
     RequestType string `json:"type"`
-    RequestData map[string]interface{} `json:"data"`
+    RequestData map[string]string `json:"data"`
 }
 ```
 Current RequestTypes: "login", "newuser"

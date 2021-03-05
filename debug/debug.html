@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <head>
-    <title>OPEN CONSOLE</title>
+    <title>low-quality debug</title>
 </head>
 <body>
     <script>
@@ -11,6 +11,8 @@
         socket.onopen = function(e) {
             console.log("[open] Connection established");
             console.log("Sending to server");
+            // Login JSON string sent to server for user "username123" with password "password123"
+            // Edit the username and password to see various error states
             socket.send(`{
                 "type": "login",
                 "data": {

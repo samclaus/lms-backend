@@ -25,6 +25,7 @@ type Server struct {
 // Request represents a request made from the client via WebSockets. It includes
 // the type of request so that we know what handler function to use with it and
 // the data associated with the request, which is passed on to  the handler function.
+// At the moment, all keys and values in the request data are strings.
 type Request struct {
 	RequestType string            `json:"type"`
 	RequestData map[string]string `json:"data"`
@@ -55,6 +56,12 @@ func (s *Server) ListenAndServe(addr string) error {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// We only care about /connect requests. Returning early saves us from annoying code indentation
 	// below.
+
+	if r.URL.Path == "/debug" {
+		http.ServeFile(w, r, "debug.html")
+		return
+	}
+
 	if r.URL.Path != "/connect" {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -89,7 +96,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch requestObject.RequestType {
 		case "login":
 			{
-				HandleLogin(requestObject)
+				loginSuccess := HandleLogin(requestObject, s)
+				if !loginSuccess {
+					return
+				}
 			}
 		default:
 			{

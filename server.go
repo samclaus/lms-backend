@@ -26,7 +26,7 @@ type Server struct {
 // the type of request so that we know what handler function to use with it and
 // the data associated with the request, which is passed on to  the handler function.
 // At the moment, all keys and values in the request data are strings.
-type Request struct {
+type WebSocketRequest struct {
 	RequestType string            `json:"type"`
 	RequestData map[string]string `json:"data"`
 }
@@ -87,7 +87,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		var requestObject Request
+		var requestObject WebSocketRequest
 		if err = json.Unmarshal(requestText, &requestObject); err != nil {
 			log.Printf("Invalid request JSON received: %v", err)
 			return

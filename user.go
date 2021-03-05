@@ -22,7 +22,7 @@ type Login struct {
 
 // HandleLogin is the login request handler function. It takes a Request
 // and a pointer to the GORM database object as a parameter.
-func HandleLogin(r Request, s *Server) bool {
+func HandleLogin(r WebSocketRequest, s *Server) bool {
 	var loginData Login
 	loginData.Username = r.RequestData["username"]
 	loginData.Password = r.RequestData["password"]

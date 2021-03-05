@@ -26,7 +26,7 @@ func HandleLogin(r Request, s *Server) bool {
 	var loginData Login
 	loginData.Username = r.RequestData["username"]
 	loginData.Password = r.RequestData["password"]
-	fmt.Print("Login request received from", loginData.Username, "\n")
+	fmt.Printf("Login request received from %v\n", loginData.Username)
 
 	var user UserInfo
 	queryResult := s.Database.Take(&user, &UserInfo{Username: loginData.Username})

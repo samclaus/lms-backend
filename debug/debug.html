@@ -14,14 +14,14 @@
             socket.send(`{
                 "type": "login",
                 "data": {
-                    "username": "username12",
-                    "password": "password"
+                    "username": "username123",
+                    "password": "password123"
                 }
             }`);
         };
 
         socket.onmessage = function(event) {
-            console.log(`[message] Data received from server: ${event.data}`);
+            console.log(`[message] ${event.data}`);
         };
 
         socket.onclose = function(event) {

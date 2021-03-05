@@ -95,9 +95,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch requestObject.RequestType {
 		case "login":
 			{
-				loginSuccess := HandleLogin(requestObject, s)
-				if !loginSuccess {
-					ws.WriteMessage(1, []byte("Authentication Failed"))
+				loginSuccess, message := HandleLogin(requestObject, s)
+				if loginSuccess {
+					ws.WriteMessage(1, []byte(message))
+				} else {
+					ws.WriteMessage(1, []byte(message))
 					return
 				}
 			}

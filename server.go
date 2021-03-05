@@ -58,7 +58,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// below.
 
 	if r.URL.Path == "/debug" {
-		http.ServeFile(w, r, "debug.html")
+		http.ServeFile(w, r, "debug/debug.html")
 		return
 	}
 
@@ -77,7 +77,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	// TODO: insert infinite for loop that ends when the connection is closed for reading and handling requests
 	keepListening := true
 
 	for keepListening {

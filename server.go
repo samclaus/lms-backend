@@ -95,11 +95,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch requestObject.RequestType {
 		case "login":
 			{
-				loginSuccess, message := HandleLogin(requestObject, s)
+				loginSuccess, user, _ := HandleLogin(requestObject, s)
 				if loginSuccess {
-					ws.WriteMessage(1, []byte(message))
+					ws.WriteMessage(1, []byte("User "+user.Username+" logged in successfully"))
 				} else {
-					ws.WriteMessage(1, []byte(message))
+					ws.WriteMessage(1, []byte("Authentication failed for user "+user.Username))
 					return
 				}
 			}
@@ -109,8 +109,4 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-
-	//Remnants of old code that haven't been cleaned up yet
-	// var user UserInfo
-	// s.Database.Take(&user, &UserInfo{Username: loginInfo.Username})
 }

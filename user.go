@@ -26,7 +26,8 @@ type Login struct {
 
 // HandleLogin is the login request handler function. It takes a Request
 // and a pointer to the GORM database object as a parameter.
-func HandleLogin(r WebSocketRequest, s *Server) (success bool, message string) {
+// TODO: replace success bools and message strings into an error or outcome type
+func HandleLogin(r WebSocketRequest, s *Server) (success bool, authenticatedUser UserInfo, message string) {
 
 	var loginData Login
 	loginData.Username = r.RequestData["username"]
@@ -34,31 +35,30 @@ func HandleLogin(r WebSocketRequest, s *Server) (success bool, message string) {
 	fmt.Printf("Login request received from %v\n", loginData.Username)
 
 	var user UserInfo
-	queryResult := s.Database.Take(&user, &UserInfo{Username: loginData.Username})
+	user.Username = loginData.Username
+	queryResult := s.Database.Take(&user, &user)
 	if queryResult.Error != nil {
 		fmt.Printf("User %v not found, closing connection\n", loginData.Username)
-		return false, "Authentication Failed: username not found"
+		return false, user, "Authentication Failed: username not found"
 	}
 
 	fmt.Printf("User %v found in database, attempting to authenticate\n", loginData.Username)
-	// TODO: salt and hash password and compare to database, return true if authenticated
 	var saltedPassword []byte = append(user.Salt, loginData.Password...)
 	var passwordHash [32]byte = sha256.Sum256(saltedPassword)
-	numRounds := 0
 
 	for i := 1; i < int(user.Rounds); i++ {
 		passwordHash = sha256.Sum256(passwordHash[0:])
-		numRounds++
 	}
 
 	storedHash := user.PasswordHash
 	fmt.Printf("Hashed Password: %v\n", passwordHash)
-	fmt.Printf("Stored Hash: %v\n", storedHash)
-	fmt.Printf("Rounds of Hashing: %v\n", numRounds+1)
+	fmt.Printf("Stored Hash:     %v\n", storedHash)
+
 	if bytes.Equal(passwordHash[0:], storedHash[0:]) {
 		fmt.Printf("User %v authenticated successfully!", user.Username)
-		return true, "Authentication Successful! Welcome, " + user.Username
+		return true, user, "Authentication Successful! Welcome, " + user.Username
 	}
 
-	return false, "Authentication Failed: incorrect password"
+	fmt.Printf("Incorrect password for user %v, closing connection", user.Username)
+	return false, user, "Authentication Failed: incorrect password"
 }

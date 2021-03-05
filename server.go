@@ -22,7 +22,7 @@ type Server struct {
 	Database *gorm.DB
 }
 
-// Request represents a request made from the client via WebSockets. It includes
+// WebSocketRequest represents a request made from the client via WebSockets. It includes
 // the type of request so that we know what handler function to use with it and
 // the data associated with the request, which is passed on to  the handler function.
 // At the moment, all keys and values in the request data are strings.

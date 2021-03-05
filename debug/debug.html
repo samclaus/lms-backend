@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <head>
-
+    <title>OPEN CONSOLE</title>
 </head>
 <body>
     <script>
+        // Almost completely copy-pasted from https://javascript.info/websocket
+        // yeet yeet ctrl-c ctrl-v ily <3
         let socket = new WebSocket("ws:localhost:8080/connect");
 
         socket.onopen = function(e) {
@@ -12,14 +14,14 @@
             socket.send(`{
                 "type": "login",
                 "data": {
-                    "username": "username123",
+                    "username": "username12",
                     "password": "password"
                 }
             }`);
         };
 
         socket.onmessage = function(event) {
-            alert(`[message] Data received from server: ${event.data}`);
+            console.log(`[message] Data received from server: ${event.data}`);
         };
 
         socket.onclose = function(event) {

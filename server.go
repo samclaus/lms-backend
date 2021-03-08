@@ -41,6 +41,11 @@ func NewServer(dbPath string) (*Server, error) {
 		return nil, errors.Wrap(err, "error opening database")
 	}
 
+	if err = db.AutoMigrate(&UserInfo{}); err != nil {
+		// TODO: close database?
+		return nil, errors.Wrap(err, "error migrating user schema")
+	}
+
 	return &Server{db}, nil
 }
 

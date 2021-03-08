@@ -1,8 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -27,8 +28,9 @@ type Server struct {
 // the data associated with the request, which is passed on to  the handler function.
 // At the moment, all keys and values in the request data are strings.
 type WebSocketRequest struct {
-	RequestType string            `json:"type"`
-	RequestData map[string]string `json:"data"`
+	ID   uint   `json:"id"`   // request ID (counter) for mapping back a response
+	Type string `json:"type"` // what type of request is it?
+	Data string `json:"data"` // request body; shape depends on the request type
 }
 
 // NewServer attempts to open the given database file and returns a new Server if
@@ -56,12 +58,6 @@ func (s *Server) ListenAndServe(addr string) error {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// We only care about /connect requests. Returning early saves us from annoying code indentation
 	// below.
-
-	if r.URL.Path == "/debug" {
-		http.ServeFile(w, r, "debug/debug.html")
-		return
-	}
-
 	if r.URL.Path != "/connect" {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -77,37 +73,59 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	// Unauthenticated actions, eg. logging in or creating new user
-	for {
-		_, requestText, err := ws.ReadMessage()
-		if err != nil {
-			log.Printf("Error reading client request from websocket: %v\n", err)
-			break
-		}
-
-		var requestObject WebSocketRequest
-		if err = json.Unmarshal(requestText, &requestObject); err != nil {
-			log.Printf("Invalid request JSON received: %v", err)
-			return
-		}
-
-		switch requestObject.RequestType {
-		case "login":
-			{
-				loginSuccess, user, _ := HandleLogin(requestObject, s)
-				if loginSuccess {
-					ws.WriteMessage(1, []byte("User "+user.Username+" logged in successfully"))
-					// Start looping to read authenticated requests here
-				} else {
-					ws.WriteMessage(1, []byte("Authentication failed for user "+user.Username))
-					return
-				}
-			}
-		default:
-			{
-				ws.WriteMessage(1, []byte("Invalid Request type"))
-				fmt.Printf("Error finding request type %v", requestObject.RequestType)
-			}
-		}
+	type LoginRequest struct {
+		Username string `json:"username"`
+		Password []byte `json:"password"` // TODO: we NEED to use msgpack, JSON will expect Base64 for the password now lol
 	}
+
+	// TODO: add a 5s timeout so we don't sit and wait forever for a login request that
+	// might not be coming.
+
+	_, loginReqJSON, err := ws.ReadMessage()
+	if err != nil {
+		log.Printf("Failed to read login request: %v", err)
+		return
+	}
+
+	var loginReq LoginRequest
+	err = json.Unmarshal(loginReqJSON, &loginReq)
+	scrub(loginReqJSON) // wipe the password from memory
+	if err != nil {
+		log.Printf("Login request was not valid JSON: %v", err)
+		return
+	}
+	log.Printf("Login request received for %q", loginReq.Username)
+
+	var user UserInfo
+	if err = s.Database.Take(&user, &UserInfo{Username: loginReq.Username}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Printf("User does not exist: %q", loginReq.Username)
+		} else {
+			log.Printf("Failed to lookup %q from database: %v", loginReq.Username, err)
+		}
+		scrub(loginReq.Password)
+		return // TODO: send back some sort of error feedback to the client
+	}
+	log.Printf("Found %q in database, attempting to authenticate", loginReq.Username)
+
+	saltedPassword := append(user.Salt, loginReq.Password...)
+	scrub(loginReq.Password)
+	passwordHash := sha256.Sum256(saltedPassword)
+	scrub(saltedPassword)
+
+	// Start i at 1 because we already did 1 round of hashing to create the variable above
+	for i := uint(1); i < user.Rounds; i++ {
+		passwordHash = sha256.Sum256(passwordHash[:])
+	}
+
+	if !bytes.Equal(passwordHash[:], user.PasswordHash) {
+		log.Printf("Authentication failed for %q: incorrect password", loginReq.Username)
+		return
+	}
+	log.Printf("Authentication successful for %q", loginReq.Username)
+
+	(&UserConn{
+		UserInfo: user,
+		Conn:     ws,
+	}).Serve()
 }
